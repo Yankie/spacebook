@@ -6,13 +6,14 @@ module.exports = {
     removeDeprecatedGapUtilities: true,
     purgeLayersByDefault: true,
   },
-  purge: {
-    enabled: true,
-    content: ["_site/**/*.html"],
-    options: {
-      safelist: [],
-    },
-  },
+  content: ["_site/**/*.html"],
+  // purge: {
+  //   enabled: true,
+  //   content: ["_site/**/*.html"],
+  //   options: {
+  //     safelist: [],
+  //   },
+  // },
   darkMode: 'class',
   theme: {
     container: {
@@ -53,7 +54,11 @@ module.exports = {
         },
       }
     },
-  }, 
+    fontFamily: {
+      sans: ['PT Astra Sans', 'sans-serif'],
+      serif: ['PT Astra Serif', 'serif'],
+    },
+  },
   variants: {},
   plugins: [
     require('@tailwindcss/typography'),

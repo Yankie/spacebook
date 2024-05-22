@@ -1,5 +1,6 @@
 (function (window, document) {
-    "use strict";
+  "use strict";
+  // import elasticlunr from "elasticlunr";
     const search = (e) => {
       const results = window.searchIndex.search(e.target.value, {
         bool: "OR",
@@ -11,8 +12,8 @@
       const navigation = document.getElementById("navigation");
 
       searchBox.addEventListener('focus', (event) => {
-        event.target.classList.remove("hidden"); 
-        resEl.classList.remove("hidden"); 
+        event.target.classList.remove("hidden");
+        resEl.classList.remove("hidden");
       });
 
     document.addEventListener('click', function(event) {
@@ -33,15 +34,12 @@
             const { id, title, description } = r.doc;
             const el = document.createElement("li", { tabindex: '-1' });
             resEl.appendChild(el);
-    
             const h3 = document.createElement("h3");
             el.appendChild(h3);
-    
             const a = document.createElement("a");
             a.setAttribute("href", id);
             a.textContent = title;
             h3.appendChild(a);
-    
             const p = document.createElement("p");
             p.textContent = description;
             el.appendChild(p);

@@ -1,17 +1,19 @@
 const { DateTime } = require("luxon");
+const pluginTOC = require('eleventy-plugin-toc');
 const CleanCSS = require("clean-css");
 const UglifyJS = require("uglify-es");
 const htmlmin = require("html-minifier");
 const svgContents = require("eleventy-plugin-svg-contents");
 const mdIterator = require('markdown-it-for-inline')
 const embedEverything = require("eleventy-plugin-embed-everything");
-const pluginTOC = require('eleventy-plugin-nesting-toc');
 const eleventyNavigationPlugin = require("@11ty/eleventy-navigation");
 const Image = require("@11ty/eleventy-img");
+
 module.exports = function(eleventyConfig) {
   // eleventyConfig.addPlugin(pluginTOC);
-  eleventyConfig.addPlugin(svgContents); 
+  eleventyConfig.addPlugin(svgContents);
   eleventyConfig.addPlugin(embedEverything);
+  eleventyConfig.addPlugin(pluginTOC)
   eleventyConfig.addShortcode("version", function () {
     return String(Date.now());
   });
@@ -71,7 +73,7 @@ module.exports = function(eleventyConfig) {
 
   // Configuration API: use eleventyConfig.addLayoutAlias(from, to) to add
   // layout aliases! Say you have a bunch of existing content using
-  // layout: post. If you don’t want to rewrite all of those values, just map
+  // layout: post. If you don't want to rewrite all of those values, just map
   // post to a new file like this:
   // eleventyConfig.addLayoutAlias("post", "layouts/my_new_post_layout.njk");
 
@@ -97,36 +99,35 @@ module.exports = function(eleventyConfig) {
   //   }, {});
   // });
 
-   // Creates custom collection "pages"
-   eleventyConfig.addCollection("pages", function(collection) {
+  // Creates custom collection "pages"
+  eleventyConfig.addCollection("pages", function(collection) {
     return collection.getFilteredByGlob("pages/*.md");
-   });
+  });
 
-   // Creates custom collection "posts"
+  // Creates custom collection "posts"
   //  eleventyConfig.addCollection("posts", function(collection) {
   //   const coll = collection.getFilteredByGlob("posts/*.md");
-  
+  //
   //   for(let i = 0; i < coll.length ; i++) {
   //     const prevPost = coll[i-1];
   //     const nextPost = coll[i + 1];
-  
+  //
   //     coll[i].data["prevPost"] = prevPost;
   //     coll[i].data["nextPost"] = nextPost;
   //   }
-  
+  //
   //   return coll;
   // });
-    
 
-   // Creates custom collection "results" for search
-   const searchFilter = require("./filters/searchFilter");
-   eleventyConfig.addFilter("search", searchFilter);
-   eleventyConfig.addCollection("results", collection => {
+  // Creates custom collection "results" for search
+  const searchFilter = require("./filters/searchFilter");
+  eleventyConfig.addFilter("search", searchFilter);
+  eleventyConfig.addCollection("results", collection => {
     return [...collection.getFilteredByGlob("**/*.md")];
-   });
-  
+  });
+
    // Creates custom collection "menuItems"
-   eleventyConfig.addCollection("menuItems", collection =>
+  eleventyConfig.addCollection("menuItems", collection =>
     collection
       .getAll()
       .filter(function(item) {
@@ -136,15 +137,13 @@ module.exports = function(eleventyConfig) {
         return (a.data.eleventyNavigation.order || 0) - (b.data.eleventyNavigation.order || 0);
       })
   );
-
   // Date formatting (human readable)
   eleventyConfig.addFilter("readableDate", dateObj => {
-    return DateTime.fromJSDate(dateObj).toFormat("LLL dd, yyyy");
+    return DateTime.fromJSDate(dateObj).setLocale("ru").toFormat("dd MMMM yyyy");
   });
 
   // Date formatting (machine readable)
   eleventyConfig.addFilter("machineDate", dateObj => {
-
     return DateTime.fromJSDate(dateObj).toFormat("yyyy-MM-dd");
   });
 
@@ -181,65 +180,74 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("images/")
   eleventyConfig.addPassthroughCopy("content/images/")
   eleventyConfig.addPassthroughCopy("admin");
-  eleventyConfig.addPassthroughCopy("_includes/assets/");
-  eleventyConfig.addPassthroughCopy("_includes/experimental/");
+  eleventyConfig.addPassthroughCopy({"_includes/assets/": "assets/"});
+  // eleventyConfig.addPassthroughCopy("_includes/experimental/");
+
+  let markdownIt = require("markdown-it");
+  let markdownLibrary = markdownIt({
+    html: true,
+    breaks: false,
+    linkify: true,
+    typographer: true,
+  });
+  markdownLibrary.disable(['replacements']); //: {'replace_scoped'}
 
   /* Markdown Plugins */
-  let markdownIt = require("markdown-it");
-  let markdownItAnchor = require("markdown-it-anchor");
-  let markdownItEmoji = require("markdown-it-emoji");
-  let markdownItFootnote = require("markdown-it-footnote");
-  let markdownItContainer = require("markdown-it-container");
-  let markdownLinkifyImages = require('markdown-it-linkify-images')
-  let markdownToc = require('markdown-it-table-of-contents')
-  let markdownItTasks = require('markdown-it-task-lists')
-  let markdownItAttrs = require("markdown-it-attrs")
-  let markdownItCenterText = require("markdown-it-center-text")
-  let options = {
-    html: true,
-    breaks: true,
-    linkify: true,
-    typographer: true
-  };
-  let opts = {
-    // permalink: true,
+  markdownLibrary.use(mdIterator, 'url_new_win', 'link_open', function (tokens, idx) {
+    const [attrName, href] = tokens[idx].attrs.find(attr => attr[0] === 'href')
+    if (href && (!href.includes('franknoirot.co') && !href.startsWith('/') && !href.startsWith('#'))) {
+      tokens[idx].attrPush([ 'target', '_blank' ])
+      tokens[idx].attrPush([ 'rel', 'noopener noreferrer' ])
+    }
+  })
+  markdownLibrary.use(require("markdown-it-anchor"), {
+    level: [2, 3, 4],
+    permalink: false,
+    // permalinkSymbol: "§",
     // permalinkClass: "direct-link",
     // permalinkSymbol: "#"
-  };
+    // includeLevel: [2,3],
+    // listType: "ol"
+  });
 
-  eleventyConfig.setLibrary("md", markdownIt(options)
-    .use(mdIterator, 'url_new_win', 'link_open', function (tokens, idx) {
-      const [attrName, href] = tokens[idx].attrs.find(attr => attr[0] === 'href')
-      if (href && (!href.includes('franknoirot.co') && !href.startsWith('/') && !href.startsWith('#'))) {
-        tokens[idx].attrPush([ 'target', '_blank' ])
-        tokens[idx].attrPush([ 'rel', 'noopener noreferrer' ])
-      }
-    })
-    .use(markdownItAnchor, opts)
-    .use(markdownItEmoji)
-    .use(markdownItFootnote)
-    .use(markdownItContainer, 'callout')
-    .use(markdownItContainer, 'callout-blue')
-    .use(markdownItContainer, 'callout-pink')
-    .use(markdownItContainer, 'callout-green')
-    .use(markdownItContainer, 'warning')
-    .use(markdownItTasks)
-    .use(markdownItCenterText)
-    .use(markdownLinkifyImages, {
-      imgClass: "p-4",
-    })
-    .use(markdownItAttrs, {
-      includeLevel: [2,3],
-      listType: "ol"
-    })
-  );
+  let markdownItContainer = require("markdown-it-container");
+  markdownLibrary.use(markdownItContainer, 'callout');
+  markdownLibrary.use(markdownItContainer, 'callout-blue');
+  markdownLibrary.use(markdownItContainer, 'callout-pink');
+  markdownLibrary.use(markdownItContainer, 'callout-green');
+  markdownLibrary.use(markdownItContainer, 'warning');
+
+  markdownLibrary.use(require("markdown-it-multimd-table"), {
+    multiline: true,
+    rowspan: true,
+    headerless: true,
+    multibody: true,
+    autolabel: true,
+  });
+  markdownLibrary.use(require("@iktakahiro/markdown-it-katex"));
+  markdownLibrary.use(require("markdown-it-admon"));
+  markdownLibrary.use(require("markdown-it-attrs"));
+  markdownLibrary.use(require("markdown-it-center-text"));
+  markdownLibrary.use(require("markdown-it-emoji").full);
+  markdownLibrary.use(require("markdown-it-footnote"));
+  markdownLibrary.use(require("markdown-it-sub"));
+  markdownLibrary.use(require("markdown-it-sup"));
+  markdownLibrary.use(require("markdown-it-task-lists"));
+  markdownLibrary.use(require("markdown-it-textual-uml"));
+  markdownLibrary.use(require("markdown-it-toc-done-right"), { level: [2,3,4] });
+  markdownLibrary.use(require("markdown-it-linkify-images"), {
+    imgClass: "p-4",
+  });
+
+  eleventyConfig.setLibrary("md", markdownLibrary);
+
 
   return {
     templateFormats: ["md", "njk", "html", "liquid"],
 
     // If your site lives in a different subdirectory, change this.
-    // Leading or trailing slashes are all normalized away, so don’t worry about it.
-    // If you don’t have a subdirectory, use "" or "/" (they do the same thing)
+    // Leading or trailing slashes are all normalized away, so don't worry about it.
+    // If you don't have a subdirectory, use "" or "/" (they do the same thing)
     // This is only used for URLs (it does not affect your file structure)
     pathPrefix: "/",
     markdownTemplateEngine: "liquid",

@@ -1,7 +1,7 @@
 {
-  "name": "Spacebook",
-  "subtitle": "Create a modern notebook to document or explain almost anything.",
-  "description": "Create a modern notebook to document or explain almost anything with spacebook.app",
+  "name": "Руководство пользователя",
+  "subtitle": "к Комплекту Средств Проектирования для технологии КМОП HCMOS8D 0,18 мкм",
+  "description": "Руководство пользователя к Комплекту Средств Проектирования для технологии КМОП HCMOS8D 0,18 мкм",
   "footer": "Made with ❤ in Minneapolis",
   "url": "https://spacebook.app",
   "githubUrl": "https://github.com/<username>/<repository>",
@@ -10,12 +10,13 @@
   "emoji": "💥",
   "enableSearch": true,
   "enableDarkMode": true,
-  "enableEditButton": true,
+  "enableEditButton": false,
   "enableDatestamp": true,
   "enableGithubLink": false,
-  "enableContact": false,
+  "enableContact": true,
   "enableNetlifyCMS": false,
   "enableComments": false,
   "enableEncryption": false,
-  "enablePageNavigation": true
+  "enablePageNavigation": true,
+  "enableTOC": true
 }
